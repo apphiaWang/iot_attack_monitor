@@ -109,10 +109,15 @@
     <div class="card card-chart">
       <div class="card-header">
         <h5 class="card-title">Daily Malicious/Benign IoT Requests</h5>
-        <p class="card-category">Line Chart with Points</p>
+        <!-- <p class="card-category">{{(new Date()).toLocalDateString()}}</p> -->
       </div>
       <div class="card-body">
+        <div *ngIf="isLoading" class="container z-index-2 position-absolute row">
+          <div class="col"><div class="loader float-right"></div></div>
+          <h3 class="col">Loading Data...</h3>
+        </div>
         <canvas id="lineChart" width="400" height="100"></canvas>
+        
       </div>
       <div class="card-footer">
         <div class="chart-legend">
@@ -121,7 +126,7 @@
         </div>
         <hr/>
         <div class="card-stats">
-          <i class="fa fa-check"></i> Last Updated at
+          <i class="fa fa-check"></i> Last Updated at {{lastUpdateTime}}
         </div>
       </div>
     </div>

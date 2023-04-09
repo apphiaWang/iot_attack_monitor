@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ToastrService } from "ngx-toastr";
-
+import { Observable } from 'rxjs';
+import axios from 'axios';
 
 @Component({
     selector: 'logs-cmp',
@@ -9,43 +10,47 @@ import { ToastrService } from "ngx-toastr";
 })
 
 export class LogsComponent{
-  public iotRequests;
-  constructor(private toastr: ToastrService) {}
+  public iotRequests = [];
+  protected simulateDate = '12/21/2018';
+  protected observable;
+  constructor(private toastr: ToastrService) {
+    this.observable = new Observable(function subscribe(subscriber) {
+      const id = setInterval(() => {
+        subscriber.next('hi');
+      }, 15000);
+    });
+  }
+  removeNotification(i) {
+    this.iotRequests.splice(i, 1);
+  }
   convertTime(timestamp) {
     const time = new Date(timestamp*1000);
-    return `${time.getFullYear()}-${time.getMonth()}-${time.getDate()}\
-     ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+    return `${(new Date()).toLocaleDateString("en-US")} ${time.toTimeString().split(" ")[0]}`;
   }
   generateAlertFromLog(log) {
     return `${log.label} ${log.proto} request recceived at ${this.convertTime(log.ts)}\n`
       + `contains ${log.orig_pkts} packets, ${log.orig_ip_bytes} bytes`;
   }
+  updateRequests() {
+    axios.post('https://nxwabxe738.execute-api.us-west-2.amazonaws.com/dev',
+            {ts1: this.getSimulateTimestamp(30), ts2:this.getSimulateTimestamp()})
+        .then(r => {
+            const newRequests = JSON.parse(r.data.body)
+                .map(l => ({label: l.label, text: this.generateAlertFromLog(l)}))
+            newRequests.forEach(r => {
+              this.iotRequests.push(r)
+            });                     
+        });
+  }
   ngOnInit(){
-    const responseData = [{
-      "id.orig_h": "192.168.100.103",
-      "id.orig_p": "55124",
-      "id.resp_h": "65.127.233.163",
-      "id.resp_p": "23",
-      "ts": 1525879831,
-      "orig_pkts": 1,
-      "orig_ip_bytes": 60,
-      "proto": "tcp",
-      "service": "http",
-      "label": "Malicious"
-  },
-  {
-      "id.orig_h": "192.168.100.103",
-      "id.orig_p": "56305",
-      "id.resp_h": "63.150.16.171",
-      "id.resp_p": "23",
-      "ts": 1525898831,
-      "orig_pkts": 3,
-      "orig_ip_bytes": 180,
-      "proto": "tcp",
-      "service": "http",
-      "label": "Benign"
-  }];
-    this.iotRequests = responseData.map(l => ({label: l.label, text: this.generateAlertFromLog(l)})) 
+    this.updateRequests();
+    this.observable.subscribe(() => this.updateRequests()); 
+  }
+  getSimulateTimestamp(timeDiff=0) {
+    const today = (new Date()).toLocaleDateString("en-US");
+    const diff = (Date.parse(today) - Date.parse(this.simulateDate));
+    const targetDate = (Date.now() - diff)/1000 - timeDiff;
+    return targetDate;
   }
   showNotification(from, align) {
     const color = Math.floor(Math.random() * 5 + 1);
