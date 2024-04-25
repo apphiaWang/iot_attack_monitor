@@ -15,11 +15,23 @@ export class TableComponent implements OnInit{
     protected simulateDate = '12/21/2018';
     ngOnInit(){
         const today = (new Date()).toLocaleDateString("en-US");
-        axios.post('https://nxwabxe738.execute-api.us-west-2.amazonaws.com/dev',
-            {ts1: Date.parse(this.simulateDate)/1000, ts2:this.getSimulateTimestamp()})
+        const readCSV = (content, delimiter = ',') => {
+            const columns = content.split('\n')[0].split(delimiter);
+            return content.split('\n')
+              .slice(1)
+              .map(row => {
+                const obj = {};
+                const values = row.split(delimiter);
+                columns.forEach((key, i) => {
+                  obj[key] = values[i];
+                });
+                return obj;
+              });
+        };
+        axios.get('assets/data/demo_data.csv')
         .then(r => {
-            const data = JSON.parse(r.data.body).map(d => {
-                const time = `${today} ${(new Date(d.ts)).toTimeString().split(" ")[0]}`;
+            const data = readCSV(r.data).map(d => {
+                const time = `${today} ${(new Date(parseFloat(d.ts))).toTimeString().split(" ")[0]}`;
                 const sender = `${d['id.orig_h']}:${d['id.orig_p']}`;
                 const receiver = `${d['id.resp_h']}:${d['id.resp_p']}`;
                 const protocol = d.proto;
@@ -27,6 +39,7 @@ export class TableComponent implements OnInit{
                 const detail = d['detailed-label'];
                 return [time, sender, receiver, protocol, isMalicious, detail];
             });
+            console.log(data[0][0])
             const columns = ['time', 'sender', 'receiver', 'protocol', 'isMalicious', 'detail'];
             let table = new DataTable('#myTable', {
                 data,
