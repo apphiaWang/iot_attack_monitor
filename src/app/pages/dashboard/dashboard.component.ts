@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import Chart from 'chart.js';
 import axios from 'axios';
+import * as $ from 'jquery';
 
 @Component({
     selector: 'dashboard-cmp',
@@ -24,9 +25,37 @@ export class DashboardComponent implements OnInit{
   public logs;
   public isLoading = true;
     ngOnInit(){
+      
+      window.alert(`The request flow and machine learning prediction have been turned off due to cloud service charge. The current UI is showing static data for demo purpose.`);
       this.deviceNum = 20;
-      this.lastUpdateTime = new Date().toLocaleString("en-US");;;
-      // console.log(this.getSimulateTimestamp())
+      this.lastUpdateTime = new Date().toLocaleString("en-US");
+
+      const readCSV = (content, delimiter = ',') => {
+        const columns = content.split('\n')[0].split(delimiter);
+        return content.split('\n')
+          .slice(1)
+          .map(row => {
+            const obj = {};
+            const values = row.split(delimiter);
+            columns.forEach((key, i) => {
+              obj[key] = values[i];
+            });
+            return obj;
+          });
+      }
+      axios.get('assets/data/demo_data.csv')
+          .then(response => {            
+            this.logs = readCSV(response.data);
+            this.logs.forEach(log => {
+              log.date = new Date(log.ts * 1000);
+              log.hour = log.date.getHours();
+            });
+            // console.log(this.logs[0])
+            this.drawLineChart();
+            this.isLoading=false;
+          });
+
+      /* fetch data from AWS deployed endpoint
       axios.post('https://nxwabxe738.execute-api.us-west-2.amazonaws.com/dev',
         {ts1: Date.parse(this.simulateDate)/1000, ts2:this.getSimulateTimestamp()})
       .then(r => {
@@ -38,10 +67,11 @@ export class DashboardComponent implements OnInit{
         this.drawLineChart();
         this.isLoading=false;
       });
+      */
     }
     drawLineChart() {
       const speedCanvas = document.getElementById("lineChart");
-      const maxHour = Math.max(...this.logs.map(l => l.hour));
+      const maxHour = 24;
       const benignData = new Array(maxHour+1).fill(0);
       const maliciousData = new Array(maxHour+1).fill(0);
       this.logs.filter(log => log.label == "Benign") 

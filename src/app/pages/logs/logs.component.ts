@@ -32,15 +32,15 @@ export class LogsComponent{
       + `contains ${log.orig_pkts} packets, ${log.orig_ip_bytes} bytes`;
   }
   updateRequests() {
-    axios.post('https://nxwabxe738.execute-api.us-west-2.amazonaws.com/dev',
-            {ts1: this.getSimulateTimestamp(30), ts2:this.getSimulateTimestamp()})
-        .then(r => {
-            const newRequests = JSON.parse(r.data.body)
-                .map(l => ({label: l.label, text: this.generateAlertFromLog(l)}))
-            newRequests.forEach(r => {
-              this.iotRequests.push(r)
-            });                     
-        });
+    // axios.post('https://nxwabxe738.execute-api.us-west-2.amazonaws.com/dev',
+    //         {ts1: this.getSimulateTimestamp(30), ts2:this.getSimulateTimestamp()})
+    //     .then(r => {
+    //         const newRequests = JSON.parse(r.data.body)
+    //             .map(l => ({label: l.label, text: this.generateAlertFromLog(l)}))
+    //         newRequests.forEach(r => {
+    //           this.iotRequests.push(r)
+    //         });                     
+    //     });
   }
   ngOnInit(){
     this.updateRequests();
