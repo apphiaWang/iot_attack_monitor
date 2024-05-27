@@ -39,7 +39,6 @@ export class TableComponent implements OnInit{
                 const detail = d['detailed-label'];
                 return [time, sender, receiver, protocol, isMalicious, detail];
             });
-            console.log(data[0][0])
             const columns = ['time', 'sender', 'receiver', 'protocol', 'isMalicious', 'detail'];
             let table = new DataTable('#myTable', {
                 data,
